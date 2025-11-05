@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ÿ·»«  «·’Ìœ·Ì…</title>
+<style>
+body{font-family:Tahoma,Arial,sans-serif;margin:0;background:#f6f6f6}
+header{background:#007bff;color:#fff;padding:12px;text-align:center;font-size:18px}
+.container{max-width:600px;margin:auto;padding:10px}
+button,input,textarea,select{width:100%;box-sizing:border-box;margin:6px 0;padding:10px;font-size:15px;border-radius:8px;border:1px solid #ccc}
+button{cursor:pointer;font-weight:bold}
+.btn-main{background:#007bff;color:#fff;border:none}
+.btn-gray{background:#e0e0e0}
+.hidden{display:none}
+.card{background:#fff;padding:10px;margin:8px 0;border-radius:8px;box-shadow:0 0 4px #ccc}
+.total{text-align:center;font-weight:bold;padding:5px}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ddd;padding:4px;text-align:center;font-size:13px}
+</style>
+</head>
+<body>
+<header>ÿ·»«  «·’Ìœ·Ì…</header>
+
+<div class="container">
+
+  <!-- «·’›Õ… «·—∆Ì”Ì… -->
+  <div id="home">
+    <button class="btn-main" onclick="showNew()">? ≈÷«›… ÿ·» ÃœÌœ</button>
+    <button class="btn-gray" onclick="showList()">?? ⁄—÷ «·ÿ·»« </button>
+  </div>
+
+  <!-- ’›Õ… ≈÷«›… «·ÿ·» -->
+  <div id="addPage" class="hidden">
+    <h3>»Ì«‰«  «·ÿ·»</h3>
+    <input id="pharmacy" placeholder="«”„ «·’Ìœ·Ì…" required>
+    <input id="phone" type="tel" placeholder="—ﬁ„ «·Â« ›" required>
+    <input id="address" placeholder="«·⁄‰Ê«‰" required>
+    <input id="rep" placeholder="«”„ «·„‰œÊ»" required>
+    <textarea id="notes" placeholder="„·«ÕŸ« " required></textarea>
+
+    <h4> ›«’Ì· «·„Ê«œ</h4>
+    <table id="items">
+      <tr><th>«”„ «·„«œ…</th><th>«·”⁄—</th><th>«·⁄œœ</th><th>«·„Ã„Ê⁄</th></tr>
+    </table>
+
+    <div class="total">«·„Ã„Ê⁄ «·ﬂ·Ì: <span id="total">0</span> —Ì«·</div>
+    <button class="btn-main" onclick="sendWhatsApp()">?? ≈—”«· ⁄»— Ê« ”«»</button>
+    <button class="btn-gray" onclick="saveOrder()">?? Õ›Ÿ «·ÿ·»</button>
+    <button onclick="goHome()">?? —ÃÊ⁄</button>
+  </div>
+
+  <!-- ’›Õ… «·ÿ·»«  -->
+  <div id="listPage" class="hidden">
+    <h3>Ã„Ì⁄ «·ÿ·»« </h3>
+    <div id="orders"></div>
+    <button onclick="clearOrders()" class="btn-gray">??? „”Õ «·ﬂ·</button>
+    <button onclick="goHome()">?? —ÃÊ⁄</button>
+  </div>
+
+</div>
+
+<script>
+const home=document.getElementById("home");
+const addPage=document.getElementById("addPage");
+const listPage=document.getElementById("listPage");
+const table=document.getElementById("items");
+const total=document.getElementById("total");
+
+for(let i=0;i<16;i++){
+ let row=document.createElement("tr");
+ row.innerHTML=`<td><input class="name"></td>
+ <td><input class="price" type="number" min="0"></td>
+ <td><input class="qty" type="number" min="0"></td>
+ <td class="sum">0</td>`;
+ table.appendChild(row);
+}
+table.addEventListener("input",()=>{
+ let t=0;
+ table.querySelectorAll("tr").forEach(r=>{
+   const p=parseFloat(r.querySelector(".price")?.value)||0;
+   const q=parseFloat(r.querySelector(".qty")?.value)||0;
+   const s=p*q;
+   if(r.querySelector(".sum"))r.querySelector(".sum").textContent=s.toFixed(2);
+   t+=s;
+ });
+ total.textContent=t.toFixed(2);
+});
+
+function showNew(){home.classList.add("hidden");addPage.classList.remove("hidden");}
+function showList(){home.classList.add("hidden");listPage.classList.remove("hidden");renderOrders();}
+function goHome(){addPage.classList.add("hidden");listPage.classList.add("hidden");home.classList.remove("hidden");}
+
+function collectData(){
+ const p=document.getElementById("pharmacy").value.trim();
+ const ph=document.getElementById("phone").value.trim();
+ const a=document.getElementById("address").value.trim();
+ const r=document.getElementById("rep").value.trim();
+ const n=document.getElementById("notes").value.trim();
+ if(!p||!ph||!a||!r||!n){alert("Ì—ÃÏ  ⁄»∆… Ã„Ì⁄ «·ÕﬁÊ·");return null;}
+ const items=[];
+ table.querySelectorAll("tr").forEach(tr=>{
+  const name=tr.querySelector(".name")?.value.trim();
+  const price=parseFloat(tr.querySelector(".price")?.value)||0;
+  const qty=parseFloat(tr.querySelector(".qty")?.value)||0;
+  if(name&&qty>0)items.push({name,price,qty,sum:price*qty});
+ });
+ return {id:Date.now(),pharmacy:p,phone:ph,address:a,rep:r,notes:n,items,total:+total.textContent,status:"ﬁÌœ «·«‰ Ÿ«—"};
+}
+
+function sendWhatsApp(){
+ const o=collectData();
+ if(!o)return;
+ let msg=`?? ÿ·» ÃœÌœ „‰ ${o.pharmacy}\n?? ${o.phone}\n?? ${o.address}\n?? ${o.rep}\n?? ${o.notes}\n`;
+ o.items.forEach((i,j)=>msg+=`\n${j+1}. ${i.name} - ${i.qty} ◊ ${i.price} = ${i.sum}`);
+ msg+=`\n\n?? «·„Ã„Ê⁄ «·ﬂ·Ì: ${o.total}`;
+ const url="https://api.whatsapp.com/send?text="+encodeURIComponent(msg);
+ window.location.href=url;
+}
+
+function saveOrder(){
+ const o=collectData();
+ if(!o)return;
+ const arr=JSON.parse(localStorage.getItem("orders")||"[]");
+ arr.push(o);
+ localStorage.setItem("orders",JSON.stringify(arr));
+ alert("?  „ Õ›Ÿ «·ÿ·» »‰Ã«Õ");
+ document.getElementById("orderForm")?.reset();
+ total.textContent="0";
+}
+
+function renderOrders(){
+ const container=document.getElementById("orders");
+ const arr=JSON.parse(localStorage.getItem("orders")||"[]");
+ if(!arr.length){container.innerHTML="<p>·«  ÊÃœ ÿ·»« </p>";return;}
+ container.innerHTML="";
+ arr.forEach(o=>{
+   const div=document.createElement("div");
+   div.className="card";
+   div.innerHTML=`<b>${o.pharmacy}</b><br>?? ${o.phone}<br>?? ${o.total} —Ì«·<br>
+   <select data-id="${o.id}">
+     <option ${o.status==="ﬁÌœ «·«‰ Ÿ«—"?"selected":""}>ﬁÌœ «·«‰ Ÿ«—</option>
+     <option ${o.status===" „ «· ”·Ì„"?"selected":""}> „ «· ”·Ì„</option>
+     <option ${o.status==="„·€Ì"?"selected":""}>„·€Ì</option>
+   </select>
+   <button onclick="sendSaved(${o.id})" class="btn-main">≈—”«· Ê« ”«»</button>`;
+   container.appendChild(div);
+ });
+ container.querySelectorAll("select").forEach(sel=>{
+   sel.onchange=()=>{
+     const arr=JSON.parse(localStorage.getItem("orders")||"[]");
+     const idx=arr.findIndex(x=>x.id==sel.dataset.id);
+     arr[idx].status=sel.value;
+     localStorage.setItem("orders",JSON.stringify(arr));
+   };
+ });
+}
+
+function sendSaved(id){
+ const arr=JSON.parse(localStorage.getItem("orders")||"[]");
+ const o=arr.find(x=>x.id==id);
+ if(!o)return;
+ let msg=`?? ÿ·» ”«»ﬁ „‰ ${o.pharmacy}\n?? ${o.phone}\n?? ${o.address}\n?? ${o.rep}\n?? ${o.notes}\n`;
+ o.items.forEach((i,j)=>msg+=`\n${j+1}. ${i.name} - ${i.qty} ◊ ${i.price} = ${i.sum}`);
+ msg+=`\n\n?? «·„Ã„Ê⁄ «·ﬂ·Ì: ${o.total}\n?? «·Õ«·…: ${o.status}`;
+ window.location.href="https://api.whatsapp.com/send?text="+encodeURIComponent(msg);
+}
+
+function clearOrders(){
+ if(confirm("Â·  —Ìœ „”Õ Ã„Ì⁄ «·ÿ·»« ø")){
+  localStorage.removeItem("orders");
+  renderOrders();
+ }
+}
+</script>
+
+</body>
+</html>
